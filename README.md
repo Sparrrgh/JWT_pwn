@@ -33,6 +33,6 @@ The first argument should be the JWT itself.
 `[= ]ey[A-Za-z0-9_-]*\.[A-Za-z0-9._-]*` - url-safe JWT version  
 `[= ]ey[A-Za-z0-9_\/+-]*\.[A-Za-z0-9._\/+-]*` - all JWT versions (higher possibility of false positives)
 
-##TODO
+## TODO
 -Support RSA signed tokens
 -Multithread cracking of keys(Probably with a module written in Go)
