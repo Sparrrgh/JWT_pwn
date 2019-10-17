@@ -175,7 +175,7 @@ def tamper_token(paylDict, headDict):
 			print("[{0}] {1} = {2}".format(menuNum, pair, paylDict[pair]))
 			paylList.append(pair)
 			i += 1
-		print("[0] Continue to next step")
+		print("[{0}] *ADD A VALUE*".format(i+1))
 		selection = 0
 		print("\nPlease select a field number:\n(0 or ENTER to Continue)")
 		try:
@@ -186,6 +186,13 @@ def tamper_token(paylDict, headDict):
 			print("\nCurrent value of {0} is: {1}".format(paylList[selection], paylDict[paylList[selection]]))
 			print("Please enter new value and hit ENTER")
 			newVal = input("> ")
+			paylDict[paylList[selection]] = newVal
+		elif selection == i+1:
+			print("Please enter new Key and hit ENTER")
+			newPair = input("> ")
+			print("Please enter a new value for {0} and hit ENTER".format(newPair))
+			newVal = input("> ")
+			paylList.append(newPair)
 			paylDict[paylList[selection]] = newVal
 		elif selection == 0:
 			break
