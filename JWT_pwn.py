@@ -50,26 +50,42 @@ if __name__ == '__main__':
 	for i in JWT_token.paylDict:
   		print(f"[+] {i} = {JWT_token.paylDict[i]}")
 
+	#Options printed according to alg
 	print("\nOptions:")
+	menuArr = ["strip"]
 	print("1: Strip signature (alg=none)")
-	print("2: Check for Public Key bypass in RSA mode")
-	print("3: Check signature against a key (symmetric)")
-	print("4: Check signature against a key file (\"kid\") (symmetric)")
-	print("5: Crack signature with supplied dictionary file (symmetric)")
-	print("6: Tamper token")
-	print("\nPlease make a selection (1-6)")
+	if(JWT_token.headDict["alg"][:2] == "HS"):
+		menuArr.append("check_HS")
+		print("2: Check signature against a key (symmetric)")
+		menuArr.append("check_HS_file")
+		print("3: Check signature against a key file (\"kid\") (symmetric)")
+		menuArr.append("crack_HS")
+		print("4: Crack signature with supplied dictionary file (symmetric)")
+	elif(JWT_token.headDict["alg"][:2] == "RS"):
+		menuArr.append("bypass_RSA")
+		print("2: Check for Public Key bypass in RSA mode")
+	menuArr.append("tamper_token")
+	print(f"{len(menuArr)}: Tamper token")
+
+	print(f"\nPlease make a selection (1-{len(menuArr)})")
+
 	try:
 		selection = int(input("> "))
+		if(selection <= 0):
+			raise RuntimeError("Option not valid")
+		selection = menuArr[selection-1]
+		
 	except:
-		selection = 0
+		selection = "else"
+	
 	#Strip signature
-	if selection == 1:
+	if selection == "strip":
 		JWT_token.strip_signature()
-		print("\n[+] Stripped token generated")
+		print("\n[+] Stripped token generated")	
 		print(f"\n{JWT_token}\n")
 		exit(1)
 	#Bypass RSA mode
-	elif selection == 2:
+	elif selection == "bypass_RSA":
 		print("\nPlease enter the Public Key filename:")
 		pubKey = input("> ")
 		try:
@@ -78,10 +94,10 @@ if __name__ == '__main__':
 			print(JWT_token)
 		except FileNotFoundError:
 			print(f"[!] File {pubKey} doesn't exist")
-		except RuntimeError:
+		except RuntimeError: 
 			print("[!] The signature is already symmetrical")
 	#Check signature against a key
-	elif selection == 3:
+	elif selection == "check_HS":
 		print("Type in the key to test")
 		key = input("> ")
 		try:
@@ -98,7 +114,7 @@ if __name__ == '__main__':
 		except RuntimeError:
 			print("[!] Algorithm is not HMAC-SHA")
 	#Check signature against a keyfile
-	elif selection == 4:
+	elif selection == "check_HS_file":
 		print("\nPlease enter the key filename:")
 		file_name= input(">")
 		try:
@@ -121,7 +137,7 @@ if __name__ == '__main__':
 		except FileNotFoundError:
 			print(f"[!] File {file_name} doesn't exist")
 	#Crack the HS key
-	elif selection == 5:
+	elif selection == "crack_HS":
 		print("\nPlease enter the dictionary filename:")
 		file_name= input("> ")
 		try:
@@ -143,7 +159,7 @@ if __name__ == '__main__':
 		except RuntimeError:
 			print("[!] Algorithm is not HMAC-SHA")
 	#Tamper token
-	elif selection == 6:
+	elif selection == "tamper_token":
 		isHeader = True
 		#tamper header and payload
 		for field_dict in [JWT_token.headDict, JWT_token.paylDict]:
