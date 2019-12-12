@@ -162,27 +162,33 @@ if __name__ == '__main__':
 				selection = 0
 				print("\nPlease select a field number:\n(or ENTER to Continue)")
 				try:
-					selection = int(input("> "))
+					selection = input("> ")
+					#If enter -1 to skip
+					if(selection == ""):
+						selection = -1
+					else:
+						selection = int(selection)
 				except:
-					selection = -1
-				if selection<len(field_dict) and selection>=0:
+					selection = -2
+				if(selection<len(field_dict) and selection>=0):
 					selectedKey = keys[selection]
 					print(f"\nCurrent value of {selectedKey} is: {field_dict[selectedKey]}")
 					print("Please enter new value and hit ENTER")
 					newVal = input("> ")
 					JWT_token.edit_token(selectedKey,newVal,isHeader)
-				elif selection == i+1:
+				elif (selection == i):
 					print("Please enter new Key and hit ENTER")
 					newPair = input("> ")
 					print(f"Please enter a new value for {newPair} and hit ENTER")
 					newVal = input("> ")
 					JWT_token.edit_token(newPair,newVal,isHeader)
-				elif selection < 0:
+				elif (selection == -1):
 					tampering = False
 					#Editing payload next
 					isHeader = False
 				else:
 					print("[!] Option not valid \n")
+					exit(1)
 		
 		#signature
 		print("\nToken Signing:")
